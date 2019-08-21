@@ -7,21 +7,22 @@
 //
 
 import UIKit
+import CoreData
 
 class TodoListViewController: UITableViewController {
     
     var itemArray = [Item]()
-    
     let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
-
+    
+    //MARK: - View DidLoad
     override func viewDidLoad() {
         super.viewDidLoad()
         
         loadItems()
-       
+        
     }
     
-    //MARK - TableView Datasource Methods
+    //MARK: - TableView Datasource Methods
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return itemArray.count
@@ -40,25 +41,27 @@ class TodoListViewController: UITableViewController {
         //Value = Condition ? Value If True : Value If False
         
         cell.accessoryType = item.done ? .checkmark : .none
-       
+        
         return cell
     }
     
     
-    //MARK - TableView Delegate Methods
+    //MARK: - TableView Delegate Methods
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-       // print(itemArray[indexPath.row])
         
-       itemArray[indexPath.row].done = !itemArray[indexPath.row].done
+        //Delete Data first from database then from tableView
+        context.delete(itemArray[indexPath.row])
+        itemArray.remove(at: indexPath.row)
+       // itemArray[indexPath.row].done = !itemArray[indexPath.row].done
         
-       saveItems()
+        saveItems()
         
         tableView.deselectRow(at: indexPath, animated: true)
-    
+        
     }
     
-    //MARK - Add New Items
+    //MARK: - Add New Items
     
     
     
@@ -81,7 +84,7 @@ class TodoListViewController: UITableViewController {
             //self.defaults.setValue(self.itemArray, forKey: "TodoListArray")
             //self.tableView.reloadData()
         }
-        
+        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
         alert.addTextField { (alertTextField) in
             //set up the alert text field
             alertTextField.placeholder = "Create New Item"
@@ -90,20 +93,20 @@ class TodoListViewController: UITableViewController {
         }
         
         alert.addAction(action)
-        
+        alert.addAction(cancelAction)
         //show our alert
         
         present(alert , animated: true , completion: nil)
         
     }
     
-    //MARK - Model Manupulation Methods
+    //MARK: - Creata Data in Core Data
     
     func saveItems() {
         
         
         do {
-          try  context.save()
+            try  context.save()
         }catch{
             print("Error Saving Context \(error)")
         }
@@ -112,14 +115,15 @@ class TodoListViewController: UITableViewController {
         
     }
     
+    //MARK: - Read Data From Data Base Using Fetch Request
     func loadItems(){
-        
-      
+        let request: NSFetchRequest<Item> = Item.fetchRequest()
+        do{
+            itemArray = try context.fetch(request)
+        }catch{
+            print("Error Fetch Request \(error)")
+        }
         
     }
     
-    
-
-
 }
-
