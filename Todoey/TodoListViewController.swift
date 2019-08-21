@@ -18,7 +18,7 @@ class TodoListViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         let request: NSFetchRequest<Item> = Item.fetchRequest()
-       loadItems(with: request)
+       loadItems()
     }
     
     //MARK: - TableView Datasource Methods
@@ -133,5 +133,22 @@ extension TodoListViewController: UISearchBarDelegate {
         //sort data that get back from data base
         request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
         loadItems(with: request)
+    }
+    func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
+        loadItems()
+        DispatchQueue.main.async {
+            searchBar.resignFirstResponder()
+        }
+    }
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        if searchBar.text!.count == 0{
+              loadItems()
+            DispatchQueue.main.async {
+                searchBar.resignFirstResponder()
+            }
+
+        }
+     
+        
     }
 }
