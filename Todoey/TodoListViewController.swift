@@ -17,9 +17,8 @@ class TodoListViewController: UITableViewController {
     //MARK: - View DidLoad
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        loadItems()
-        
+        let request: NSFetchRequest<Item> = Item.fetchRequest()
+       loadItems(with: request)
     }
     
     //MARK: - TableView Datasource Methods
@@ -50,10 +49,7 @@ class TodoListViewController: UITableViewController {
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
-        //Delete Data first from database then from tableView
-        context.delete(itemArray[indexPath.row])
-        itemArray.remove(at: indexPath.row)
-       // itemArray[indexPath.row].done = !itemArray[indexPath.row].done
+        itemArray[indexPath.row].done = !itemArray[indexPath.row].done
         
         saveItems()
         
@@ -116,14 +112,26 @@ class TodoListViewController: UITableViewController {
     }
     
     //MARK: - Read Data From Data Base Using Fetch Request
-    func loadItems(){
-        let request: NSFetchRequest<Item> = Item.fetchRequest()
+    func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest()){
+        
         do{
             itemArray = try context.fetch(request)
         }catch{
             print("Error Fetch Request \(error)")
         }
+        tableView.reloadData()
         
     }
     
+}
+
+  //MARK: - TodoListViewController Extension -> SearchBar Method
+extension TodoListViewController: UISearchBarDelegate {
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        let request: NSFetchRequest<Item> = Item.fetchRequest()
+        request.predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
+        //sort data that get back from data base
+        request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
+        loadItems(with: request)
+    }
 }
